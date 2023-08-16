@@ -1001,7 +1001,7 @@ class DefaultAssetPickerBuilderDelegate
                         child: Column(
                           children: <Widget>[
                             Expanded(child: assetsGridBuilder(context)),
-                            if (isPreviewEnabled || !isSingleAssetMode)
+                            if (!isSingleAssetMode || isPreviewEnabled)
                               bottomActionBar(context),
                           ],
                         ),
@@ -1553,7 +1553,18 @@ class DefaultAssetPickerBuilderDelegate
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: !p.isSelectedNotEmpty ? const Color(0xffEAE8E8) : const Color(0xff1890FF),
+              color: !p.isSelectedNotEmpty ? const Color(0xffEAE8E8) : null,
+              gradient: p.isSelectedNotEmpty
+                ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  // stops: [0.0, 1.0],
+                  colors: [
+                    Color(0xFF00B6B0),
+                    Color(0xFF0090D4),
+                  ]
+                )
+                : null
             ),
             width: 44,
             height: 44,
@@ -1660,7 +1671,7 @@ class DefaultAssetPickerBuilderDelegate
                     maxHeight: MediaQuery.sizeOf(context).height *
                         (isAppleOS(context) ? .6 : .8),
                   ),
-                  color: theme.colorScheme.background,
+                  color: theme.colorScheme.surface,
                   child: child,
                 ),
               ),
@@ -1987,7 +1998,7 @@ class DefaultAssetPickerBuilderDelegate
                   // '${p.isSelectedNotEmpty ? ' (${p.selectedAssets.length})' : ''}',
                   style: TextStyle(
                     color: p.isSelectedNotEmpty
-                        ? const Color(0xff1890FF)
+                        ? const Color(0xFF05AABD)
                         : c.themeData.textTheme.bodySmall?.color,
                     fontSize: 16,
                     fontWeight: FontWeight.w700
@@ -1999,11 +2010,11 @@ class DefaultAssetPickerBuilderDelegate
                 SizedBox(width: 10),
                 Container(
                   decoration: BoxDecoration(
-                    color: p.isSelectedNotEmpty ? Color(0xff1890FF) : Colors.transparent,
+                    color: p.isSelectedNotEmpty ? Color(0xFF05AABD) : Colors.transparent,
                     borderRadius: BorderRadius.circular(20)
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  child: Text("${p.isSelectedNotEmpty ? '${p.selectedAssets.length}/10' : ''}", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xffFFFFFF)),)
+                  child: Text("${p.isSelectedNotEmpty ? '${p.selectedAssets.length}/${this.provider.maxAssets}' : ''}", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xffFFFFFF)),)
                 )
               ],
             ),
@@ -2116,7 +2127,7 @@ class DefaultAssetPickerBuilderDelegate
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: Color(0xff1890FF),
+                          color: Color(0xFF05AABD),
                           borderRadius: BorderRadius.circular(20)
                         ),
                         child: Center(
