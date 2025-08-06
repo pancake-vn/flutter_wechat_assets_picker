@@ -2,9 +2,6 @@
 // Use of this source code is governed by an Apache license that can be found
 // in the LICENSE file.
 
-// ignore_for_file: prefer_const_constructors
-
-import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:typed_data' as typed_data;
 import 'dart:ui' as ui;
@@ -13,6 +10,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
@@ -29,11 +27,6 @@ import '../widget/asset_picker.dart';
 import '../widget/asset_picker_app_bar.dart';
 import '../widget/asset_picker_viewer.dart';
 import '../widget/builder/asset_entity_grid_item_builder.dart';
-import '../widget/builder/value_listenable_builder_2.dart';
-import '../widget/gaps.dart';
-import '../widget/platform_progress_indicator.dart';
-import '../widget/scale_text.dart';
-import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
 
 /// The delegate to build the whole picker's components.
 ///
@@ -533,11 +526,10 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
     Widget child = Container(
       // height: bottomActionBarHeight + context.bottomPadding,
       padding: const EdgeInsets.symmetric(horizontal: 20).copyWith(
-        bottom: isAppleOS ? context.bottomPadding : 15,
-        top: 10
+        bottom: isAppleOS(context) ? context.bottomPadding : 15,
+        top: 10,
       ),
-      // color: Color(0xffFFFFFF).withOpacity(0.95),
-      color: theme.primaryColor.withOpacity(isAppleOS ? 0.90 : 1),
+      color: theme.primaryColor.withOpacity(isAppleOS(context) ? 0.90 : 1),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -571,7 +563,9 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: IconButton(
-        onPressed: Navigator.of(context).maybePop,
+        onPressed: () {
+          Navigator.maybeOf(context)?.maybePop();
+        },
         tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         icon: Icon(Icons.close, color: theme.iconTheme.color, size: 20,),
       ),
@@ -960,7 +954,7 @@ class DefaultAssetPickerBuilderDelegate
 
   @override
   AssetPickerAppBar appBar(BuildContext context) {
-    return AssetPickerAppBar(
+    final appBar = AssetPickerAppBar(
       backgroundColor: theme.appBarTheme.backgroundColor,
       centerTitle: false,
       title: Semantics(
@@ -968,17 +962,8 @@ class DefaultAssetPickerBuilderDelegate
         child: pathEntitySelector(context),
       ),
       leading: backButton(context),
-      // Condition for displaying the confirm button:
-      // - On Android, show if preview is enabled or if multi asset mode.
-      //   If no preview and single asset mode, do not show confirm button,
-      //   because any click on an asset selects it.
-      // - On iOS and macOS, show nothing.
-      // actions: <Widget>[
-      //   if (isPreviewEnabled || !isSingleAssetMode)
-      //     confirmButton(context),
-      // ],
       actionsPadding: const EdgeInsetsDirectional.only(end: 14),
-      // blurRadius: isAppleOS ? appleOSBlurRadius : 0,
+      blurRadius: isAppleOS(context) ? appleOSBlurRadius : 0,
     );
     appBarPreferredSize ??= appBar.preferredSize;
     return appBar;
@@ -1147,8 +1132,7 @@ class DefaultAssetPickerBuilderDelegate
         final double topPadding =
             context.topPadding + appBarPreferredSize!.height;
 
-        Widget _sliverGrid(BuildContext _context, List<AssetEntity> assets) {
-          // print(assets);
+        Widget sliverGrid(BuildContext context, List<AssetEntity> assets) {
           return SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (_, int index) => Builder(
@@ -1809,13 +1793,13 @@ class DefaultAssetPickerBuilderDelegate
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       if (path == null && isPermissionLimited)
-                        _text(
+                        pathText(
                           context,
                           textDelegate.changeAccessibleLimitedAssets,
                           semanticsTextDelegate.changeAccessibleLimitedAssets,
                         ),
                       if (path != null)
-                        _text(
+                        pathText(
                           context,
                           isPermissionLimited && path.isAll
                               ? textDelegate.accessiblePathName
@@ -1941,11 +1925,16 @@ class DefaultAssetPickerBuilderDelegate
                                 ),
                               ),
                               if (semanticsCount != null)
-                                TextSpan(text: ' ($semanticsCount)'),
+                                ScaleText(
+                                  '($semanticsCount)',
+                                  style: TextStyle(
+                                    color: theme.textTheme.bodySmall?.color,
+                                    fontSize: 17,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                             ],
-                            style: const TextStyle(fontSize: 17),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
@@ -1999,7 +1988,7 @@ class DefaultAssetPickerBuilderDelegate
                   style: TextStyle(
                     color: p.isSelectedNotEmpty
                         ? const Color(0xFF05AABD)
-                        : c.themeData.textTheme.bodySmall?.color,
+                        : c.textTheme.bodySmall?.color,
                     fontSize: 16,
                     fontWeight: FontWeight.w700
                   ),
