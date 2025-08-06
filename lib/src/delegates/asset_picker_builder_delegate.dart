@@ -2,6 +2,9 @@
 // Use of this source code is governed by an Apache license that can be found
 // in the LICENSE file.
 
+// ignore_for_file: prefer_const_constructors
+
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:typed_data' as typed_data;
 import 'dart:ui' as ui;
@@ -26,6 +29,11 @@ import '../widget/asset_picker.dart';
 import '../widget/asset_picker_app_bar.dart';
 import '../widget/asset_picker_viewer.dart';
 import '../widget/builder/asset_entity_grid_item_builder.dart';
+import '../widget/builder/value_listenable_builder_2.dart';
+import '../widget/gaps.dart';
+import '../widget/platform_progress_indicator.dart';
+import '../widget/scale_text.dart';
+import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
 
 /// The delegate to build the whole picker's components.
 ///
@@ -523,12 +531,15 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
   /// 底部操作栏部件
   Widget bottomActionBar(BuildContext context) {
     Widget child = Container(
-      height: bottomActionBarHeight + context.bottomPadding,
+      // height: bottomActionBarHeight + context.bottomPadding,
       padding: const EdgeInsets.symmetric(horizontal: 20).copyWith(
-        bottom: context.bottomPadding,
+        bottom: isAppleOS ? context.bottomPadding : 15,
+        top: 10
       ),
-      color: theme.primaryColor.withOpacity(isAppleOS(context) ? 0.90 : 1),
+      // color: Color(0xffFFFFFF).withOpacity(0.95),
+      color: theme.primaryColor.withOpacity(isAppleOS ? 0.90 : 1),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           previewButton(context),
           const Spacer(),
@@ -558,16 +569,11 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
   /// 返回按钮
   Widget backButton(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: IconButton(
-        onPressed: () {
-          Navigator.maybeOf(context)?.maybePop();
-        },
-        tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-        icon: Icon(
-          Icons.close,
-          semanticLabel: MaterialLocalizations.of(context).closeButtonTooltip,
-        ),
+        onPressed: Navigator.of(context).maybePop,
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        icon: Icon(Icons.close, color: theme.iconTheme.color, size: 20,),
       ),
     );
   }
@@ -954,13 +960,25 @@ class DefaultAssetPickerBuilderDelegate
 
   @override
   AssetPickerAppBar appBar(BuildContext context) {
-    final AssetPickerAppBar appBar = AssetPickerAppBar(
+    return AssetPickerAppBar(
+      backgroundColor: theme.appBarTheme.backgroundColor,
+      centerTitle: false,
       title: Semantics(
         onTapHint: semanticsTextDelegate.sActionSwitchPathLabel,
         child: pathEntitySelector(context),
       ),
       leading: backButton(context),
-      blurRadius: isAppleOS(context) ? appleOSBlurRadius : 0,
+      // Condition for displaying the confirm button:
+      // - On Android, show if preview is enabled or if multi asset mode.
+      //   If no preview and single asset mode, do not show confirm button,
+      //   because any click on an asset selects it.
+      // - On iOS and macOS, show nothing.
+      // actions: <Widget>[
+      //   if (isPreviewEnabled || !isSingleAssetMode)
+      //     confirmButton(context),
+      // ],
+      actionsPadding: const EdgeInsetsDirectional.only(end: 14),
+      // blurRadius: isAppleOS ? appleOSBlurRadius : 0,
     );
     appBarPreferredSize ??= appBar.preferredSize;
     return appBar;
@@ -983,7 +1001,7 @@ class DefaultAssetPickerBuilderDelegate
                         child: Column(
                           children: <Widget>[
                             Expanded(child: assetsGridBuilder(context)),
-                            if (isPreviewEnabled || !isSingleAssetMode)
+                            if (!isSingleAssetMode || isPreviewEnabled)
                               bottomActionBar(context),
                           ],
                         ),
@@ -1129,7 +1147,8 @@ class DefaultAssetPickerBuilderDelegate
         final double topPadding =
             context.topPadding + appBarPreferredSize!.height;
 
-        Widget sliverGrid(BuildContext context, List<AssetEntity> assets) {
+        Widget _sliverGrid(BuildContext _context, List<AssetEntity> assets) {
+          // print(assets);
           return SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (_, int index) => Builder(
@@ -1209,6 +1228,7 @@ class DefaultAssetPickerBuilderDelegate
             return Directionality(
               textDirection: effectiveGridDirection(context),
               child: ColoredBox(
+                // color: Color(0xffFFFFFF),
                 color: theme.canvasColor,
                 child: Selector<DefaultAssetPickerProvider, List<AssetEntity>>(
                   selector: (_, DefaultAssetPickerProvider p) =>
@@ -1219,6 +1239,7 @@ class DefaultAssetPickerBuilderDelegate
                     );
                     appBarPreferredSize ??= appBar(context).preferredSize;
                     return CustomScrollView(
+                      // reverse: true,
                       physics: const AlwaysScrollableScrollPhysics(),
                       controller: gridScrollController,
                       anchor: gridRevert ? anchor : 0,
@@ -1525,40 +1546,32 @@ class DefaultAssetPickerBuilderDelegate
   Widget confirmButton(BuildContext context) {
     return Consumer<DefaultAssetPickerProvider>(
       builder: (_, DefaultAssetPickerProvider p, __) {
-        final bool isSelectedNotEmpty = p.isSelectedNotEmpty;
-        final bool shouldAllowConfirm =
-            isSelectedNotEmpty || p.previousSelectedAssets.isNotEmpty;
-        return MaterialButton(
-          minWidth: shouldAllowConfirm ? 48 : 20,
-          height: appBarItemHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          color: theme.colorScheme.secondary,
-          disabledColor: theme.splashColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(3),
-          ),
-          onPressed: shouldAllowConfirm
-              ? () {
-                  Navigator.maybeOf(context)?.maybePop(p.selectedAssets);
-                }
+        return InkWell(
+          onTap: p.isSelectedNotEmpty
+              ? () => Navigator.of(context).maybePop(p.selectedAssets)
               : null,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          child: ScaleText(
-            isSelectedNotEmpty && !isSingleAssetMode
-                ? '${textDelegate.confirm}'
-                    ' (${p.selectedAssets.length}/${p.maxAssets})'
-                : textDelegate.confirm,
-            style: TextStyle(
-              color: shouldAllowConfirm
-                  ? theme.textTheme.bodyLarge?.color
-                  : theme.textTheme.bodySmall?.color,
-              fontSize: 17,
-              fontWeight: FontWeight.normal,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: !p.isSelectedNotEmpty ? const Color(0xffEAE8E8) : null,
+              gradient: p.isSelectedNotEmpty
+                ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  // stops: [0.0, 1.0],
+                  colors: [
+                    Color(0xFF00B6B0),
+                    Color(0xFF0090D4),
+                  ]
+                )
+                : null
             ),
-            semanticsLabel: isSelectedNotEmpty && !isSingleAssetMode
-                ? '${semanticsTextDelegate.confirm}'
-                    ' (${p.selectedAssets.length}/${p.maxAssets})'
-                : semanticsTextDelegate.confirm,
+            width: 44,
+            height: 44,
+            child: Center(
+              child: Icon(PhosphorIcons.paper_plane_right_fill, color: p.isSelectedNotEmpty ? Color(0xffFAFAFA) : Color(0xffB7B7B7), size: 20,)
+              // child: Image.asset('assets/Vector.png', width: 19, color: p.isSelectedNotEmpty ? Color(0xffFAFAFA) : Color(0xffB7B7B7),),
+            ),
           ),
         );
       },
@@ -1658,7 +1671,7 @@ class DefaultAssetPickerBuilderDelegate
                     maxHeight: MediaQuery.sizeOf(context).height *
                         (isAppleOS(context) ? .6 : .8),
                   ),
-                  color: theme.colorScheme.background,
+                  color: theme.colorScheme.surface,
                   child: child,
                 ),
               ),
@@ -1748,9 +1761,11 @@ class DefaultAssetPickerBuilderDelegate
       return Flexible(
         child: ScaleText(
           text,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.normal,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            height: 1.5,
+            color: theme.iconTheme.color,
           ),
           maxLines: 1,
           overflow: TextOverflow.fade,
@@ -1773,63 +1788,63 @@ class DefaultAssetPickerBuilderDelegate
           isSwitchingPath.value = !isSwitchingPath.value;
         },
         child: Container(
-          height: appBarItemHeight,
+          // height: appBarItemHeight,
           constraints: BoxConstraints(
             maxWidth: MediaQuery.sizeOf(context).width * 0.5,
           ),
-          padding: const EdgeInsetsDirectional.only(start: 12, end: 6),
+          padding: const EdgeInsetsDirectional.only(start: 0, end: 6),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            color: theme.focusColor,
+            // color: theme.dividerColor,
           ),
           child: Selector<DefaultAssetPickerProvider,
               PathWrapper<AssetPathEntity>?>(
             selector: (_, DefaultAssetPickerProvider p) => p.currentPath,
             builder: (_, PathWrapper<AssetPathEntity>? p, Widget? w) {
               final AssetPathEntity? path = p?.path;
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  if (path == null && isPermissionLimited)
-                    pathText(
-                      context,
-                      textDelegate.changeAccessibleLimitedAssets,
-                      semanticsTextDelegate.changeAccessibleLimitedAssets,
-                    ),
-                  if (path != null)
-                    pathText(
-                      context,
-                      isPermissionLimited && path.isAll
-                          ? textDelegate.accessiblePathName
-                          : pathNameBuilder?.call(path) ?? path.name,
-                      isPermissionLimited && path.isAll
-                          ? semanticsTextDelegate.accessiblePathName
-                          : pathNameBuilder?.call(path) ?? path.name,
-                    ),
-                  w!,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      if (path == null && isPermissionLimited)
+                        _text(
+                          context,
+                          textDelegate.changeAccessibleLimitedAssets,
+                          semanticsTextDelegate.changeAccessibleLimitedAssets,
+                        ),
+                      if (path != null)
+                        _text(
+                          context,
+                          isPermissionLimited && path.isAll
+                              ? textDelegate.accessiblePathName
+                              : pathNameBuilder?.call(path) ?? path.name,
+                          isPermissionLimited && path.isAll
+                              ? semanticsTextDelegate.accessiblePathName
+                              : pathNameBuilder?.call(path) ?? path.name,
+                        ),
+                      w!,
+                    ],
+                  ),
+                  // Text("Send to", style: TextStyle(fontSize: 12, color: Color(0xff828282), height: 1.67))
                 ],
               );
             },
             child: Padding(
               padding: const EdgeInsetsDirectional.only(start: 5),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.iconTheme.color!.withOpacity(0.5),
-                ),
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: isSwitchingPath,
-                  builder: (_, bool isSwitchingPath, Widget? w) {
-                    return Transform.rotate(
-                      angle: isSwitchingPath ? math.pi : 0,
-                      child: w,
-                    );
-                  },
-                  child: Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: theme.colorScheme.primary,
-                  ),
+              child: ValueListenableBuilder<bool>(
+                valueListenable: isSwitchingPath,
+                builder: (_, bool isSwitchingPath, Widget? w) {
+                  return Transform.rotate(
+                    angle: isSwitchingPath ? math.pi : 0,
+                    child: w,
+                  );
+                },
+                child: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20,
+                  color: theme.iconTheme.color
                 ),
               ),
             ),
@@ -1910,9 +1925,21 @@ class DefaultAssetPickerBuilderDelegate
                           end: 20,
                         ),
                         child: ExcludeSemantics(
-                          child: ScaleText.rich(
-                            [
-                              TextSpan(text: name),
+                          child: Row(
+                            children: <Widget>[
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    end: 10,
+                                  ),
+                                  child: ScaleText(
+                                    name,
+                                    style: TextStyle(fontSize: 17, color: theme.iconTheme.color),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
                               if (semanticsCount != null)
                                 TextSpan(text: ' ($semanticsCount)'),
                             ],
@@ -1963,21 +1990,33 @@ class DefaultAssetPickerBuilderDelegate
           child: Selector<DefaultAssetPickerProvider, String>(
             selector: (_, DefaultAssetPickerProvider p) =>
                 p.selectedDescriptions,
-            builder: (BuildContext c, __, ___) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: ScaleText(
-                '${textDelegate.preview}'
-                '${p.isSelectedNotEmpty ? ' (${p.selectedAssets.length})' : ''}',
-                style: TextStyle(
-                  color: p.isSelectedNotEmpty
-                      ? null
-                      : c.textTheme.bodySmall?.color,
-                  fontSize: 17,
+            builder: (BuildContext c, __, ___) => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ScaleText(
+                  '${textDelegate.preview}',
+                  // '${p.isSelectedNotEmpty ? ' (${p.selectedAssets.length})' : ''}',
+                  style: TextStyle(
+                    color: p.isSelectedNotEmpty
+                        ? const Color(0xFF05AABD)
+                        : c.themeData.textTheme.bodySmall?.color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700
+                  ),
+                  maxScaleFactor: 1.2,
+                  semanticsLabel: '${semanticsTextDelegate.preview}'
+                      '${p.isSelectedNotEmpty ? ' (${p.selectedAssets.length})' : ''}',
                 ),
-                maxScaleFactor: 1.2,
-                semanticsLabel: '${semanticsTextDelegate.preview}'
-                    '${p.isSelectedNotEmpty ? ' (${p.selectedAssets.length})' : ''}',
-              ),
+                SizedBox(width: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: p.isSelectedNotEmpty ? Color(0xFF05AABD) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20)
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  child: Text("${p.isSelectedNotEmpty ? '${p.selectedAssets.length}/${this.provider.maxAssets}' : ''}", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xffFFFFFF)),)
+                )
+              ],
             ),
           ),
         ),
@@ -2043,13 +2082,13 @@ class DefaultAssetPickerBuilderDelegate
             selectAsset(context, asset, index, selected);
           },
           child: Container(
-            margin: EdgeInsets.all(indicatorSize / 4),
-            width: isPreviewEnabled ? indicatorSize : null,
-            height: isPreviewEnabled ? indicatorSize : null,
-            alignment: AlignmentDirectional.topEnd,
-            child: (!isPreviewEnabled && isSingleAssetMode && !selected)
-                ? const SizedBox.shrink()
-                : innerSelector,
+            // margin: EdgeInsets.all(indicatorSize / 4),
+            // width: isPreviewEnabled ? indicatorSize : null,
+            // height: isPreviewEnabled ? indicatorSize : null,
+            // alignment: AlignmentDirectional.topEnd,
+            // child: (!isPreviewEnabled && isSingleAssetMode && !selected)
+            //     ? const SizedBox.shrink()
+            //     : innerSelector,
           ),
         );
         if (isPreviewEnabled) {
@@ -2066,49 +2105,48 @@ class DefaultAssetPickerBuilderDelegate
 
   @override
   Widget selectedBackdrop(BuildContext context, int index, AssetEntity asset) {
-    final double indicatorSize =
-        MediaQuery.sizeOf(context).width / gridCount / 3;
+    // final double indicatorSize = context.mediaQuery.size.width / gridCount / 3;
     return Positioned.fill(
-      child: GestureDetector(
-        onTap: isPreviewEnabled
-            ? () {
-                viewAsset(context, index, asset);
-              }
-            : null,
-        child: Consumer<DefaultAssetPickerProvider>(
-          builder: (_, DefaultAssetPickerProvider p, __) {
-            final int index = p.selectedAssets.indexOf(asset);
-            final bool selected = index != -1;
-            return AnimatedContainer(
-              duration: switchingPathDuration,
-              padding: EdgeInsets.all(indicatorSize * .35),
+      child: Consumer<DefaultAssetPickerProvider>(
+        builder: (_, DefaultAssetPickerProvider p, __) {
+          final int index = p.selectedAssets.indexOf(asset);
+          final bool selected = index != -1;
+          return InkWell(
+            onTap: () {
+              selectAsset(context, asset, index, selected);
+            },
+            child: Container(
               color: selected
-                  ? theme.colorScheme.primary.withOpacity(.45)
-                  : theme.colorScheme.background.withOpacity(.1),
+                  ? Color(0xffFFFFFF).withOpacity(0.5)
+                  : Colors.transparent,
               child: selected && !isSingleAssetMode
-                  ? Align(
-                      alignment: AlignmentDirectional.topStart,
-                      child: SizedBox(
-                        height: indicatorSize / 2.5,
-                        child: FittedBox(
-                          alignment: AlignmentDirectional.topStart,
-                          fit: BoxFit.cover,
+                  ? Container(
+                    color: Colors.transparent,
+                    child: Center(
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF05AABD),
+                          borderRadius: BorderRadius.circular(20)
+                        ),
+                        child: Center(
                           child: Text(
                             '${index + 1}',
                             style: TextStyle(
-                              color: theme.textTheme.bodyLarge?.color
-                                  ?.withOpacity(.75),
-                              fontWeight: FontWeight.w600,
-                              height: 1,
+                              color: Color(0xffFFFFFF),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 17,
                             ),
                           ),
                         ),
                       ),
-                    )
+                    ),
+                  )
                   : const SizedBox.shrink(),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
