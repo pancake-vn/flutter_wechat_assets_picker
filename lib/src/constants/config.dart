@@ -36,6 +36,7 @@ class AssetPickerConfig {
     this.shouldRevertGrid,
     this.limitedPermissionOverlayPredicate,
     this.pathNameBuilder,
+    this.sentToName,
   })  : assert(
           pickerTheme == null || themeColor == null,
           'pickerTheme and themeColor cannot be set at the same time.',
@@ -68,6 +69,8 @@ class AssetPickerConfig {
   /// Maximum count for asset selection.
   /// 资源选择的最大数量
   final int maxAssets;
+
+  final String? sentToName;
 
   /// Assets should be loaded per page.
   /// 资源选择的最大数量

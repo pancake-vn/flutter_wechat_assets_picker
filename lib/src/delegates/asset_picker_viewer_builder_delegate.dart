@@ -9,6 +9,7 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
@@ -165,7 +166,7 @@ abstract class AssetPickerViewerBuilderDelegate<Asset, Path> {
   @mustCallSuper
   void initStateAndTicker(
     covariant AssetPickerViewerState<Asset, Path> state,
-    TickerProvider v, // TODO(Alex): Remove this in the next major version.
+    TickerProvider v,
   ) {
     initAnimations(state);
   }
@@ -485,11 +486,16 @@ class DefaultAssetPickerViewerBuilderDelegate
   /// Preview item widgets for images.
   /// 图片的底部预览部件
   Widget _imagePreviewItem(AssetEntity asset) {
-    return Positioned.fill(
-      child: RepaintBoundary(
-        child: ExtendedImage(
-          image: AssetEntityImageProvider(asset, isOriginal: false),
-          fit: BoxFit.cover,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        height: 56,
+        width: 56,
+        child: RepaintBoundary(
+          child: ExtendedImage(
+            image: AssetEntityImageProvider(asset, isOriginal: false),
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
@@ -547,10 +553,6 @@ class DefaultAssetPickerViewerBuilderDelegate
 
   @override
   Widget bottomDetailBuilder(BuildContext context) {
-    final backgroundColor = themeData.bottomAppBarTheme.color?.withOpacity(
-      themeData.bottomAppBarTheme.color!.opacity *
-          (isAppleOS(context) ? .9 : 1),
-    );
     return ValueListenableBuilder(
       valueListenable: isDisplayingDetail,
       builder: (_, v, child) => AnimatedPositionedDirectional(
@@ -559,49 +561,49 @@ class DefaultAssetPickerViewerBuilderDelegate
         bottom: v ? 0.0 : -(context.bottomPadding + bottomDetailHeight),
         start: 0.0,
         end: 0.0,
-        height: context.bottomPadding + bottomDetailHeight,
         child: child!,
       ),
       child: CNP<AssetPickerViewerProvider<AssetEntity>?>.value(
         value: provider,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
-            if (provider != null)
-              ValueListenableBuilder<int>(
-                valueListenable: selectedNotifier,
-                builder: (_, int count, __) => Container(
-                  width: count > 0 ? double.maxFinite : 0,
-                  height: bottomPreviewHeight,
-                  color: backgroundColor,
-                  child: ListView.builder(
-                    controller: previewingListController,
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                    physics: const ClampingScrollPhysics(),
-                    itemCount: count,
-                    itemBuilder: bottomDetailItemBuilder,
+        child: Container(
+          color: themeData.bottomAppBarTheme.color,
+          padding: const EdgeInsets.only(top: 10, left: 16, right: 16, bottom: 42),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              if (provider != null)
+                Expanded(
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: selectedNotifier,
+                    builder: (_, int count, __) => SizedBox(
+                      height: 56,
+                      child: ListView.builder(
+                        controller: previewingListController,
+                        scrollDirection: Axis.horizontal,
+                        physics: const ClampingScrollPhysics(),
+                        itemCount: count,
+                        itemBuilder: bottomDetailItemBuilder,
+                      ),
+                    ),
                   ),
                 ),
+              Container(
+                margin: const EdgeInsets.only(left: 10),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: themeData.canvasColor)),
+                  color: themeData.bottomAppBarTheme.color,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    if (provider != null || isWeChatMoment)
+                      confirmButton(context),
+                  ],
+                ),
               ),
-            Container(
-              height: bottomBarHeight + context.bottomPadding,
-              padding: const EdgeInsets.symmetric(horizontal: 20.0)
-                  .copyWith(bottom: context.bottomPadding),
-              decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: themeData.canvasColor)),
-                color: backgroundColor,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  if (provider != null || isWeChatMoment)
-                    confirmButton(context),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -636,10 +638,7 @@ class DefaultAssetPickerViewerBuilderDelegate
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: padding,
-        vertical: padding * 2,
-      ),
+      padding: const EdgeInsets.only(right: 8),
       child: AspectRatio(
         aspectRatio: 1.0,
         child: StreamBuilder<int>(
@@ -689,10 +688,11 @@ class DefaultAssetPickerViewerBuilderDelegate
                           duration: kThemeAnimationDuration,
                           curve: Curves.easeInOut,
                           decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                             border: isViewing
                                 ? Border.all(
-                                    color: themeData.colorScheme.secondary,
-                                    width: 3,
+                                    color: const Color(0xFF05AABD),
+                                    width: 2,
                                   )
                                 : null,
                             color: isSelected
@@ -739,8 +739,9 @@ class DefaultAssetPickerViewerBuilderDelegate
                 stream: pageStreamController.stream,
                 builder: (_, AsyncSnapshot<int> snapshot) => ScaleText(
                   '${snapshot.requireData + 1}/${previewAssets.length}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
+                    color: themeData.iconTheme.color,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -801,58 +802,64 @@ class DefaultAssetPickerViewerBuilderDelegate
             }
           }
 
-          String buildText() {
-            if (isWeChatMoment && hasVideo) {
-              return textDelegate.confirm;
-            }
-            if (provider!.isSelectedNotEmpty) {
-              return '${textDelegate.confirm}'
-                  ' (${provider.currentlySelectedAssets.length}'
-                  '/'
-                  '${selectorProvider!.maxAssets})';
-            }
-            return textDelegate.confirm;
-          }
-
           final bool isButtonEnabled = provider == null ||
               provider.currentlySelectedAssets.isNotEmpty ||
               previewAssets.isEmpty ||
               selectedNotifier.value == 0;
-          return MaterialButton(
-            minWidth:
-                (isWeChatMoment && hasVideo) || provider!.isSelectedNotEmpty
-                    ? 48
-                    : 20,
-            height: 32,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            color: themeData.colorScheme.secondary,
-            disabledColor: themeData.splashColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(3),
-            ),
-            onPressed: isButtonEnabled ? onPressed : null,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            child: ScaleText(
-              buildText(),
-              style: TextStyle(
-                color: themeData.textTheme.bodyLarge?.color,
-                fontSize: 17,
-                fontWeight: FontWeight.normal,
-              ),
-              overflow: TextOverflow.fade,
-              softWrap: false,
-              semanticsLabel: () {
-                if (isWeChatMoment && hasVideo) {
-                  return semanticsTextDelegate.confirm;
-                }
-                if (provider!.isSelectedNotEmpty) {
-                  return '${semanticsTextDelegate.confirm}'
-                      ' (${provider.currentlySelectedAssets.length}'
-                      '/'
-                      '${selectorProvider!.maxAssets})';
-                }
-                return semanticsTextDelegate.confirm;
-              }(),
+
+          return SizedBox(
+            width: 48,
+            height: 46,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  bottom: 0,
+                  child: InkWell(
+                    onTap: isButtonEnabled ? onPressed : null,
+                    child: Container(
+                      height: 44,
+                      width: 44,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF00B6B0),
+                            Color(0xFF0090D4),
+                          ],
+                        ),
+                      ),
+                      child: const Icon(
+                        PhosphorIcons.paper_plane_right_fill,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${provider?.currentlySelectedAssets.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF05AABD),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -862,7 +869,7 @@ class DefaultAssetPickerViewerBuilderDelegate
 
   /// Select button for apple OS.
   /// 苹果系列系统的选择按钮
-  Widget _appleOSSelectButton(
+  Widget _selectButton(
     BuildContext context,
     bool isSelected,
     AssetEntity asset,
@@ -878,17 +885,18 @@ class DefaultAssetPickerViewerBuilderDelegate
           Feedback.forTap(context);
           onChangingSelected(context, asset, isSelected);
         },
-        child: AnimatedContainer(
-          duration: kThemeAnimationDuration,
-          width: 28.0,
-          decoration: BoxDecoration(
-            border: !isSelected
-                ? Border.all(color: themeData.iconTheme.color!)
-                : null,
-            color: isSelected ? themeData.colorScheme.secondary : null,
+        child: Container(
+          width: 20,
+          height: 20,
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
+            color: Color(0xFF05AABD),
           ),
-          child: const Center(child: Icon(Icons.check, size: 20.0)),
+          child: const Icon(
+            PhosphorIcons.check_bold,
+            color: Colors.white,
+            size: 16,
+          ),
         ),
       ),
     );
@@ -940,7 +948,7 @@ class DefaultAssetPickerViewerBuilderDelegate
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
                     if (isAppleOS(context))
-                      _appleOSSelectButton(context, isSelected, asset)
+                      _selectButton(context, isSelected, asset)
                     else
                       _androidSelectButton(context, isSelected, asset),
                     if (!isAppleOS(context))
@@ -987,7 +995,7 @@ class DefaultAssetPickerViewerBuilderDelegate
                 ? SystemUiOverlayStyle.light
                 : SystemUiOverlayStyle.dark),
         child: Material(
-          color: themeData.scaffoldBackgroundColor,
+          color: themeData.primaryColor,
           child: Stack(
             children: <Widget>[
               Positioned.fill(child: _pageViewBuilder(context)),
