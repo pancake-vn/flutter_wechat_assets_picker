@@ -246,7 +246,7 @@ class AssetPickerDelegate {
           selectionHandleColor: themeColor,
         ),
         indicatorColor: themeColor,
-        appBarTheme: AppBarTheme(
+        appBarTheme: AppBarThemeData(
           backgroundColor: Colors.grey[100],
           systemOverlayStyle: const SystemUiOverlayStyle(
             statusBarBrightness: Brightness.light,
@@ -255,7 +255,7 @@ class AssetPickerDelegate {
           iconTheme: IconThemeData(color: Colors.grey[900]),
           elevation: 0,
         ),
-        bottomAppBarTheme: BottomAppBarTheme(
+        bottomAppBarTheme: BottomAppBarThemeData(
           color: Colors.grey[100],
         ),
         buttonTheme: ButtonThemeData(buttonColor: themeColor),
@@ -308,7 +308,7 @@ class AssetPickerDelegate {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      bottomAppBarTheme: BottomAppBarTheme(
+      bottomAppBarTheme: BottomAppBarThemeData(
         color: Colors.grey[850],
       ),
       buttonTheme: ButtonThemeData(buttonColor: themeColor),
