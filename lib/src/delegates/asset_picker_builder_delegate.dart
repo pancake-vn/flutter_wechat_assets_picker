@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'dart:typed_data' as typed_data;
 import 'dart:ui' as ui;
 
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -567,7 +568,11 @@ abstract class AssetPickerBuilderDelegate<Asset, Path> {
           Navigator.maybeOf(context)?.maybePop();
         },
         tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        icon: Icon(Icons.close, color: theme.iconTheme.color, size: 20,),
+        icon: Icon(
+          Icons.close,
+          color: theme.iconTheme.color,
+          size: 20,
+        ),
       ),
     );
   }
@@ -1536,26 +1541,29 @@ class DefaultAssetPickerBuilderDelegate
               : null,
           child: Container(
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: !p.isSelectedNotEmpty ? const Color(0xffEAE8E8) : null,
-              gradient: p.isSelectedNotEmpty
-                ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  // stops: [0.0, 1.0],
-                  colors: [
-                    Color(0xFF00B6B0),
-                    Color(0xFF0090D4),
-                  ]
-                )
-                : null
-            ),
+                shape: BoxShape.circle,
+                color: !p.isSelectedNotEmpty ? const Color(0xffEAE8E8) : null,
+                gradient: p.isSelectedNotEmpty
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        // stops: [0.0, 1.0],
+                        colors: [
+                            Color(0xFF00B6B0),
+                            Color(0xFF0090D4),
+                          ])
+                    : null),
             width: 44,
             height: 44,
             child: Center(
-              child: Icon(PhosphorIcons.paper_plane_right_fill, color: p.isSelectedNotEmpty ? Color(0xffFAFAFA) : Color(0xffB7B7B7), size: 20,)
-              // child: Image.asset('assets/Vector.png', width: 19, color: p.isSelectedNotEmpty ? Color(0xffFAFAFA) : Color(0xffB7B7B7),),
-            ),
+                child: Icon(
+              PhosphorIcons.paper_plane_right_fill,
+              color:
+                  p.isSelectedNotEmpty ? Color(0xffFAFAFA) : Color(0xffB7B7B7),
+              size: 20,
+            )
+                // child: Image.asset('assets/Vector.png', width: 19, color: p.isSelectedNotEmpty ? Color(0xffFAFAFA) : Color(0xffB7B7B7),),
+                ),
           ),
         );
       },
@@ -1825,11 +1833,8 @@ class DefaultAssetPickerBuilderDelegate
                     child: w,
                   );
                 },
-                child: Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: theme.iconTheme.color
-                ),
+                child: Icon(Icons.keyboard_arrow_down,
+                    size: 20, color: theme.iconTheme.color),
               ),
             ),
           ),
@@ -1918,7 +1923,9 @@ class DefaultAssetPickerBuilderDelegate
                                   ),
                                   child: ScaleText(
                                     name,
-                                    style: TextStyle(fontSize: 17, color: theme.iconTheme.color),
+                                    style: TextStyle(
+                                        fontSize: 17,
+                                        color: theme.iconTheme.color),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1970,43 +1977,30 @@ class DefaultAssetPickerBuilderDelegate
         );
       },
       child: Consumer<DefaultAssetPickerProvider>(
-        builder: (context, DefaultAssetPickerProvider p, __) => GestureDetector(
-          onTap: p.isSelectedNotEmpty
-              ? () {
-                  viewAsset(context, null, p.selectedAssets.first);
-                }
-              : null,
-          child: Selector<DefaultAssetPickerProvider, String>(
-            selector: (_, DefaultAssetPickerProvider p) =>
-                p.selectedDescriptions,
-            builder: (BuildContext c, __, ___) => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ScaleText(
-                  '${textDelegate.preview}',
-                  // '${p.isSelectedNotEmpty ? ' (${p.selectedAssets.length})' : ''}',
-                  style: TextStyle(
-                    color: p.isSelectedNotEmpty
-                        ? const Color(0xFF05AABD)
-                        : c.textTheme.bodySmall?.color,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700
-                  ),
-                  maxScaleFactor: 1.2,
-                  semanticsLabel: '${semanticsTextDelegate.preview}'
-                      '${p.isSelectedNotEmpty ? ' (${p.selectedAssets.length})' : ''}',
-                ),
-                SizedBox(width: 10),
-                Container(
+        builder: (context, DefaultAssetPickerProvider p, __) =>
+            Selector<DefaultAssetPickerProvider, String>(
+          selector: (_, DefaultAssetPickerProvider p) => p.selectedDescriptions,
+          builder: (BuildContext c, __, ___) => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
                   decoration: BoxDecoration(
-                    color: p.isSelectedNotEmpty ? Color(0xFF05AABD) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(20)
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  child: Text("${p.isSelectedNotEmpty ? '${p.selectedAssets.length}/${this.provider.maxAssets}' : ''}", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xffFFFFFF)),)
-                )
-              ],
-            ),
+                      color: p.isSelectedNotEmpty
+                          ? const Color(0xFF05AABD)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  child: Text(
+                    p.isSelectedNotEmpty
+                        ? '${p.selectedAssets.length}/${this.provider.maxAssets}'
+                        : '',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xffFFFFFF)),
+                  ))
+            ],
           ),
         ),
       ),
@@ -2071,14 +2065,14 @@ class DefaultAssetPickerBuilderDelegate
             selectAsset(context, asset, index, selected);
           },
           child: Container(
-            // margin: EdgeInsets.all(indicatorSize / 4),
-            // width: isPreviewEnabled ? indicatorSize : null,
-            // height: isPreviewEnabled ? indicatorSize : null,
-            // alignment: AlignmentDirectional.topEnd,
-            // child: (!isPreviewEnabled && isSingleAssetMode && !selected)
-            //     ? const SizedBox.shrink()
-            //     : innerSelector,
-          ),
+              // margin: EdgeInsets.all(indicatorSize / 4),
+              // width: isPreviewEnabled ? indicatorSize : null,
+              // height: isPreviewEnabled ? indicatorSize : null,
+              // alignment: AlignmentDirectional.topEnd,
+              // child: (!isPreviewEnabled && isSingleAssetMode && !selected)
+              //     ? const SizedBox.shrink()
+              //     : innerSelector,
+              ),
         );
         if (isPreviewEnabled) {
           return PositionedDirectional(
@@ -2104,34 +2098,84 @@ class DefaultAssetPickerBuilderDelegate
             onTap: () {
               selectAsset(context, asset, index, selected);
             },
+            onLongPress: () {
+              if (asset.type == AssetType.image) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  barrierColor: Colors.black54,
+                  builder: (BuildContext context) {
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Center(
+                        child: Dialog(
+                          elevation: 0,
+                          backgroundColor: Colors.transparent,
+                          insetPadding: EdgeInsets.zero,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.sizeOf(context).height * 0.8,
+                              ),
+                              child: ExtendedImage(
+                                image: AssetEntityImageProvider(
+                                  asset,
+                                  isOriginal: true,
+                                ),
+                                fit: BoxFit.contain,
+                                loadStateChanged: (state) =>
+                                    switch (state.extendedImageLoadState) {
+                                  LoadState.loading => const SizedBox(
+                                      width: 40,
+                                      height: 40,
+                                      child: Center(
+                                          child: CircularProgressIndicator(
+                                              color: Colors.cyanAccent,
+                                              strokeWidth: 2))),
+                                  LoadState.completed => state.completedWidget,
+                                  LoadState.failed =>
+                                    const Icon(PhosphorIcons.warning_circle)
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }
+            },
             child: Container(
               color: selected
                   ? Color(0xffFFFFFF).withOpacity(0.5)
                   : Colors.transparent,
               child: selected && !isSingleAssetMode
                   ? Container(
-                    color: Colors.transparent,
-                    child: Center(
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF05AABD),
-                          borderRadius: BorderRadius.circular(20)
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              color: Color(0xffFFFFFF),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 17,
+                      color: Colors.transparent,
+                      child: Center(
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                              color: Color(0xFF05AABD),
+                              borderRadius: BorderRadius.circular(20)),
+                          child: Center(
+                            child: Text(
+                              '${index + 1}',
+                              style: TextStyle(
+                                color: Color(0xffFFFFFF),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 17,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  )
+                    )
                   : const SizedBox.shrink(),
             ),
           );

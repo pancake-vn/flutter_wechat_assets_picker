@@ -81,9 +81,9 @@ class AssetPickerDelegate {
     );
     final AssetPickerPageRoute<List<AssetEntity>> route =
         pageRouteBuilder?.call(const SizedBox.shrink()) ??
-            AssetPickerPageRoute<List<AssetEntity>>(
-              builder: (_) => const SizedBox.shrink(),
-            );
+        AssetPickerPageRoute<List<AssetEntity>>(
+          builder: (_) => const SizedBox.shrink(),
+        );
     final DefaultAssetPickerProvider provider = DefaultAssetPickerProvider(
       maxAssets: pickerConfig.maxAssets,
       pageSize: pickerConfig.pageSize,
@@ -118,13 +118,14 @@ class AssetPickerDelegate {
         locale: Localizations.maybeLocaleOf(context),
       ),
     );
-    final List<AssetEntity>? result = await Navigator.maybeOf(
-      context,
-      rootNavigator: useRootNavigator,
-    )?.push<List<AssetEntity>>(
-      pageRouteBuilder?.call(picker) ??
-          AssetPickerPageRoute<List<AssetEntity>>(builder: (_) => picker),
-    );
+    final List<AssetEntity>? result =
+        await Navigator.maybeOf(
+          context,
+          rootNavigator: useRootNavigator,
+        )?.push<List<AssetEntity>>(
+          pageRouteBuilder?.call(picker) ??
+              AssetPickerPageRoute<List<AssetEntity>>(builder: (_) => picker),
+        );
     return result;
   }
 
@@ -145,8 +146,11 @@ class AssetPickerDelegate {
   ///  * [AssetPickerBuilderDelegate] for how to customize/override widgets
   ///    during the picking process.
   /// {@endtemplate}
-  Future<List<Asset>?> pickAssetsWithDelegate<Asset, Path,
-      PickerProvider extends AssetPickerProvider<Asset, Path>>(
+  Future<List<Asset>?> pickAssetsWithDelegate<
+    Asset,
+    Path,
+    PickerProvider extends AssetPickerProvider<Asset, Path>
+  >(
     BuildContext context, {
     required AssetPickerBuilderDelegate<Asset, Path> delegate,
     PermissionRequestOption permissionRequestOption =
@@ -161,13 +165,14 @@ class AssetPickerDelegate {
       permissionRequestOption: permissionRequestOption,
       builder: delegate,
     );
-    final List<Asset>? result = await Navigator.maybeOf(
-      context,
-      rootNavigator: useRootNavigator,
-    )?.push<List<Asset>>(
-      pageRouteBuilder?.call(picker) ??
-          AssetPickerPageRoute<List<Asset>>(builder: (_) => picker),
-    );
+    final List<Asset>? result =
+        await Navigator.maybeOf(
+          context,
+          rootNavigator: useRootNavigator,
+        )?.push<List<Asset>>(
+          pageRouteBuilder?.call(picker) ??
+              AssetPickerPageRoute<List<Asset>>(builder: (_) => picker),
+        );
     return result;
   }
 
@@ -255,9 +260,7 @@ class AssetPickerDelegate {
           iconTheme: IconThemeData(color: Colors.grey[900]),
           elevation: 0,
         ),
-        bottomAppBarTheme: BottomAppBarTheme(
-          color: Colors.grey[100],
-        ),
+        bottomAppBarTheme: BottomAppBarThemeData(color: Colors.grey[100]),
         buttonTheme: ButtonThemeData(buttonColor: themeColor),
         iconTheme: IconThemeData(color: Colors.grey[900]),
         checkboxTheme: CheckboxThemeData(
@@ -308,9 +311,7 @@ class AssetPickerDelegate {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      bottomAppBarTheme: BottomAppBarTheme(
-        color: Colors.grey[850],
-      ),
+      bottomAppBarTheme: BottomAppBarThemeData(color: Colors.grey[850]),
       buttonTheme: ButtonThemeData(buttonColor: themeColor),
       iconTheme: const IconThemeData(color: Colors.white),
       checkboxTheme: CheckboxThemeData(
