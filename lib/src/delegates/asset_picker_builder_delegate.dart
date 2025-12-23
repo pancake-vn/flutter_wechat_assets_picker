@@ -6,7 +6,6 @@ import 'dart:math' as math;
 import 'dart:typed_data' as typed_data;
 import 'dart:ui' as ui;
 
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -15,6 +14,7 @@ import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:wechat_assets_picker/src/delegates/asset_picker_preview.dart';
 import 'package:wechat_picker_library/wechat_picker_library.dart';
 
 import '../constants/constants.dart';
@@ -2094,91 +2094,14 @@ class DefaultAssetPickerBuilderDelegate
         builder: (_, DefaultAssetPickerProvider p, __) {
           final int index = p.selectedAssets.indexOf(asset);
           final bool selected = index != -1;
-          return InkWell(
-            onTap: () {
-              selectAsset(context, asset, index, selected);
-            },
-            onLongPress: () {
-              if (asset.type == AssetType.image) {
-                showDialog(
-                  context: context,
-                  barrierDismissible: true,
-                  barrierColor: Colors.black54,
-                  builder: (BuildContext context) {
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Center(
-                        child: Dialog(
-                          elevation: 0,
-                          backgroundColor: Colors.transparent,
-                          insetPadding: EdgeInsets.zero,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              constraints: BoxConstraints(
-                                maxHeight:
-                                    MediaQuery.sizeOf(context).height * 0.8,
-                              ),
-                              child: ExtendedImage(
-                                image: AssetEntityImageProvider(
-                                  asset,
-                                  isOriginal: true,
-                                ),
-                                fit: BoxFit.contain,
-                                loadStateChanged: (state) =>
-                                    switch (state.extendedImageLoadState) {
-                                  LoadState.loading => const SizedBox(
-                                      width: 40,
-                                      height: 40,
-                                      child: Center(
-                                          child: CircularProgressIndicator(
-                                              color: Colors.cyanAccent,
-                                              strokeWidth: 2))),
-                                  LoadState.completed => state.completedWidget,
-                                  LoadState.failed =>
-                                    const Icon(PhosphorIcons.warning_circle)
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }
-            },
-            child: Container(
-              color: selected
-                  ? Color(0xffFFFFFF).withOpacity(0.5)
-                  : Colors.transparent,
-              child: selected && !isSingleAssetMode
-                  ? Container(
-                      color: Colors.transparent,
-                      child: Center(
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                              color: Color(0xFF05AABD),
-                              borderRadius: BorderRadius.circular(20)),
-                          child: Center(
-                            child: Text(
-                              '${index + 1}',
-                              style: TextStyle(
-                                color: Color(0xffFFFFFF),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 17,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          );
+          return AssetPickerPreview(
+              asset: asset,
+              index: index,
+              selected: selected,
+              isSingleAssetMode: isSingleAssetMode,
+              onTap: () {
+                selectAsset(context, asset, index, selected);
+              });
         },
       ),
     );
