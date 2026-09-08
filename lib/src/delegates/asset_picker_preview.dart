@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class AssetPickerPreview extends StatefulWidget {
@@ -106,7 +106,7 @@ class _AssetPickerPreviewState extends State<AssetPickerPreview>
                             ),
                           LoadState.completed => state.completedWidget,
                           LoadState.failed =>
-                            const Icon(PhosphorIcons.warning_circle),
+                            const Icon(PhosphorIconsRegular.warningCircle),
                         },
                       ),
                     ),

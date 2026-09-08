@@ -9,7 +9,7 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
@@ -831,7 +831,7 @@ class DefaultAssetPickerViewerBuilderDelegate
                         ),
                       ),
                       child: const Icon(
-                        PhosphorIcons.paper_plane_right_fill,
+                        PhosphorIconsFill.paperPlaneRight,
                         color: Colors.white,
                         size: 24,
                       ),
@@ -893,7 +893,7 @@ class DefaultAssetPickerViewerBuilderDelegate
             color: Color(0xFF05AABD),
           ),
           child: const Icon(
-            PhosphorIcons.check_bold,
+            PhosphorIconsBold.check,
             color: Colors.white,
             size: 16,
           ),

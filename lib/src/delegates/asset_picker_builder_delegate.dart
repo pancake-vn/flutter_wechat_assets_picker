@@ -10,7 +10,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
@@ -1557,7 +1557,7 @@ class DefaultAssetPickerBuilderDelegate
             height: 44,
             child: Center(
                 child: Icon(
-              PhosphorIcons.paper_plane_right_fill,
+              PhosphorIconsFill.paperPlaneRight,
               color:
                   p.isSelectedNotEmpty ? Color(0xffFAFAFA) : Color(0xffB7B7B7),
               size: 20,
